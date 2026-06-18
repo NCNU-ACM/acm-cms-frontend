@@ -65,6 +65,30 @@
           </div>
 
           <div class="field">
+            <label>關聯活動（選填）</label>
+            <select v-model="form.related_event">
+              <option value="">無</option>
+              <option v-for="e in events" :key="e.id" :value="`${e.semester}/${e.id}`">
+                {{ e.title }}（{{ e.date }}）
+              </option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>封面圖網址（選填）</label>
+            <input v-model="form.cover_image" placeholder="https://..." />
+          </div>
+
+          <div class="field">
+            <label>圖集（選填）</label>
+            <div v-for="(img, index) in form.gallery" :key="index" class="contact-row">
+              <input v-model="form.gallery[index]" placeholder="圖片網址" />
+              <button type="button" class="btn-remove" @click="removeGalleryImage(index)">移除</button>
+            </div>
+            <button type="button" class="btn-add" @click="addGalleryImage">+ 新增圖片</button>
+          </div>
+
+          <div class="field">
             <label>標籤（選填）</label>
             <div v-for="(tag, index) in form.tags" :key="index" class="contact-row">
               <input v-model="form.tags[index]" placeholder="標籤名稱" />
@@ -102,6 +126,7 @@ import { api } from '../api/client.js';
 
 const items = ref([]);
 const groups = ref([]);
+const events = ref([]);
 const loading = ref(true);
 const showForm = ref(false);
 const editingId = ref(null);
@@ -115,6 +140,9 @@ const form = ref({
   group: '',
   date: '',
   description: '',
+  related_event: '',
+  cover_image: '',
+  gallery: [],
   tags: [],
   links: [],
 });
@@ -140,6 +168,14 @@ const removeLink = (index) => {
   form.value.links.splice(index, 1);
 };
 
+const addGalleryImage = () => {
+  form.value.gallery.push('');
+};
+
+const removeGalleryImage = (index) => {
+  form.value.gallery.splice(index, 1);
+};
+
 const loadShowcase = async () => {
   loading.value = true;
   try {
@@ -159,10 +195,18 @@ const loadGroups = async () => {
   }
 };
 
+const loadEvents = async () => {
+  try {
+    events.value = await api.getEvents();
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 const openCreateForm = () => {
   editingId.value = null;
   editingGroup.value = null;
-  form.value = { title: '', group: '', date: '', description: '', tags: [], links: [] };
+  form.value = { title: '', group: '', date: '', description: '', related_event: '', cover_image: '', gallery: [], tags: [], links: [] };
   formError.value = '';
   showForm.value = true;
 };
@@ -175,6 +219,9 @@ const openEditForm = (item) => {
     group: item.group,
     date: item.date,
     description: item.description,
+    related_event: item.related_event || '',
+    cover_image: item.cover_image || '',
+    gallery: [...(item.gallery || [])],
     tags: [...(item.tags || [])],
     links: (item.links || []).map(l => ({ ...l })),
   };
@@ -194,9 +241,13 @@ const handleSubmit = async () => {
       ...form.value,
       tags: form.value.tags.filter(t => t.trim()),
       links: form.value.links.filter(l => l.label && l.url),
+      gallery: form.value.gallery.filter(g => g.trim()),
     };
     if (payload.tags.length === 0) delete payload.tags;
     if (payload.links.length === 0) delete payload.links;
+    if (payload.gallery.length === 0) delete payload.gallery;
+    if (!payload.related_event) delete payload.related_event;
+    if (!payload.cover_image) delete payload.cover_image;
 
     if (editingId.value) {
       await api.updateShowcase(editingGroup.value, editingId.value, payload);
@@ -225,6 +276,7 @@ const handleDelete = async (item) => {
 onMounted(() => {
   loadShowcase();
   loadGroups();
+  loadEvents();
 });
 </script>
 

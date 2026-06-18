@@ -5,14 +5,6 @@
       <button class="btn-primary" @click="openCreateForm">新增活動</button>
     </div>
 
-    <div class="filter">
-      <label>篩選學期：</label>
-      <select v-model="filterSemester" @change="loadEvents">
-        <option value="">全部</option>
-        <option v-for="sem in semesters" :key="sem" :value="sem">{{ sem }}</option>
-      </select>
-    </div>
-
     <div v-if="loading">載入中...</div>
     <div v-else-if="events.length === 0" class="empty">目前沒有活動資料</div>
 
@@ -23,7 +15,6 @@
           <th>標題</th>
           <th>小組</th>
           <th>類型</th>
-          <th>學期</th>
           <th>操作</th>
         </tr>
       </thead>
@@ -33,7 +24,6 @@
           <td>{{ event.title }}</td>
           <td>{{ groupName(event.group) }}</td>
           <td>{{ event.type }}</td>
-          <td>{{ event.semester }}</td>
           <td>
             <button class="btn-small" @click="openEditForm(event)">編輯</button>
             <button class="btn-small btn-danger" @click="handleDelete(event)">刪除</button>
@@ -46,18 +36,6 @@
       <div class="modal">
         <h3>{{ editingId ? '編輯活動' : '新增活動' }}</h3>
         <form @submit.prevent="handleSubmit">
-          <div class="field">
-            <label>學期</label>
-            <div class="semester-selects">
-              <select v-model="academicYear" :disabled="!!editingId">
-                <option v-for="y in academicYears" :key="y" :value="y">{{ y }} 學年</option>
-              </select>
-              <select v-model="semesterPart" :disabled="!!editingId">
-                <option value="1">上學期</option>
-                <option value="2">下學期</option>
-              </select>
-            </div>
-          </div>
           <div class="field">
             <label>活動標題</label>
             <input v-model="form.title" required />
@@ -89,6 +67,19 @@
             <textarea v-model="form.description" required rows="3"></textarea>
           </div>
           <div class="field">
+            <label>詳細內容（選填，可以寫完整活動介紹）</label>
+            <textarea v-model="form.content" rows="6"></textarea>
+          </div>
+          <div class="field">
+            <label>相關連結（選填，例如簡章、歷屆連結）</label>
+            <div v-for="(link, index) in form.links" :key="index" class="contact-row">
+              <input v-model="link.label" placeholder="連結名稱，例如：活動簡章" />
+              <input v-model="link.url" placeholder="連結網址" />
+              <button type="button" class="btn-remove" @click="removeLink(index)">移除</button>
+            </div>
+            <button type="button" class="btn-add" @click="addLink">+ 新增連結</button>
+          </div>
+          <div class="field">
             <label>報名連結（選填）</label>
             <input v-model="form.registration" />
           </div>
@@ -106,56 +97,48 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted } from 'vue';
 import { api } from '../api/client.js';
-
-const currentYear = new Date().getFullYear() - 1911;
-const academicYears = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
 const events = ref([]);
 const groups = ref([]);
 const loading = ref(true);
 const showForm = ref(false);
 const editingId = ref(null);
-const editingSemester = ref(null);
 const submitting = ref(false);
 const formError = ref('');
-const filterSemester = ref('');
-
-const academicYear = ref(currentYear);
-const semesterPart = ref('1');
 
 const eventTypes = ['招募', '演講', '競賽', '工作坊', '其他'];
 
-const semesters = computed(() => {
-  const set = new Set(events.value.map(e => e.semester));
-  return Array.from(set).sort().reverse();
-});
-
 const form = ref({
-  semester: `${currentYear}1`,
   title: '',
   date: '',
   group: '',
   type: '',
   location: '',
   description: '',
+  content: '',
+  links: [],
   registration: '',
 });
-
-watch([academicYear, semesterPart], () => {
-  form.value.semester = `${academicYear.value}${semesterPart.value}`;
-}, { immediate: true });
 
 const groupName = (slug) => {
   const g = groups.value.find(g => g.slug === slug);
   return g ? g.name : slug;
 };
 
+const addLink = () => {
+  form.value.links.push({ label: '', url: '' });
+};
+
+const removeLink = (index) => {
+  form.value.links.splice(index, 1);
+};
+
 const loadEvents = async () => {
   loading.value = true;
   try {
-    events.value = await api.getEvents(filterSemester.value || undefined);
+    events.value = await api.getEvents();
   } catch (e) {
     console.error(e);
   } finally {
@@ -173,29 +156,22 @@ const loadGroups = async () => {
 
 const openCreateForm = () => {
   editingId.value = null;
-  editingSemester.value = null;
-  academicYear.value = currentYear;
-  semesterPart.value = '1';
-  form.value = { semester: `${currentYear}1`, title: '', date: '', group: '', type: '', location: '', description: '', registration: '' };
+  form.value = { title: '', date: '', group: '', type: '', location: '', description: '', content: '', links: [], registration: '' };
   formError.value = '';
   showForm.value = true;
 };
 
 const openEditForm = (event) => {
   editingId.value = event.id;
-  editingSemester.value = event.semester;
-
-  academicYear.value = parseInt(event.semester.slice(0, -1));
-  semesterPart.value = event.semester.slice(-1);
-
   form.value = {
-    semester: event.semester,
     title: event.title,
     date: event.date,
     group: event.group,
     type: event.type,
     location: event.location || '',
     description: event.description,
+    content: event.content || '',
+    links: (event.links || []).map(l => ({ ...l })),
     registration: event.registration || '',
   };
   formError.value = '';
@@ -210,12 +186,17 @@ const handleSubmit = async () => {
   submitting.value = true;
   formError.value = '';
   try {
-    const payload = { ...form.value };
+    const payload = {
+      ...form.value,
+      links: form.value.links.filter(l => l.label && l.url),
+    };
     if (!payload.location) delete payload.location;
+    if (!payload.content) delete payload.content;
     if (!payload.registration) delete payload.registration;
+    if (payload.links.length === 0) delete payload.links;
 
     if (editingId.value) {
-      await api.updateEvent(editingSemester.value, editingId.value, payload);
+      await api.updateEvent(editingId.value, payload);
     } else {
       await api.createEvent(payload);
     }
@@ -231,7 +212,7 @@ const handleSubmit = async () => {
 const handleDelete = async (event) => {
   if (!confirm('確定要刪除這個活動嗎？')) return;
   try {
-    await api.deleteEvent(event.semester, event.id);
+    await api.deleteEvent(event.id);
     await loadEvents();
   } catch (e) {
     alert(e.message || '刪除失敗');
@@ -259,26 +240,6 @@ onMounted(() => {
 
 h2 {
   font-size: 1.5rem;
-}
-
-.filter {
-  margin-bottom: 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.filter label {
-  color: #94a3b8;
-  font-size: 0.9rem;
-}
-
-.filter select {
-  padding: 0.4rem 0.75rem;
-  border-radius: 0.4rem;
-  border: 1px solid #2d3548;
-  background: #0f1422;
-  color: white;
 }
 
 .empty {
@@ -392,13 +353,35 @@ h2 {
   border-color: #3b82f6;
 }
 
-.semester-selects {
+.contact-row {
   display: flex;
   gap: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
-.semester-selects select {
+.contact-row input {
   flex: 1;
+}
+
+.btn-remove {
+  background: transparent;
+  border: 1px solid #2d3548;
+  color: #f87171;
+  padding: 0 0.75rem;
+  border-radius: 0.4rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.btn-add {
+  background: transparent;
+  border: 1px dashed #3b82f6;
+  color: #3b82f6;
+  padding: 0.4rem 0.875rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  width: 100%;
 }
 
 .form-actions {

@@ -58,14 +58,14 @@ export const api = {
   deleteGroup: (slug) =>
     request(`/groups/${slug}`, { method: 'DELETE' }),
 
-  getEvents: (semester) =>
-    request(semester ? `/events?semester=${semester}` : '/events'),
+  getEvents: () => 
+    request('/events/'),
   createEvent: (data) =>
     request('/events', { method: 'POST', body: JSON.stringify(data) }),
-  updateEvent: (semester, id, data) =>
-    request(`/events/${semester}/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  deleteEvent: (semester, id) =>
-    request(`/events/${semester}/${id}`, { method: 'DELETE' }),
+  updateEvent: (id, data) =>
+    request(`/events/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteEvent: (id) =>
+    request(`/events/${id}`, { method: 'DELETE' }),
 
   getMembers: (semester) =>
     request(semester ? `/members?semester=${semester}` : '/members'),

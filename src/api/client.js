@@ -59,7 +59,7 @@ export const api = {
     request(`/groups/${slug}`, { method: 'DELETE' }),
 
   getEvents: () => 
-    request('/events/'),
+    request('/events'),
   createEvent: (data) =>
     request('/events', { method: 'POST', body: JSON.stringify(data) }),
   updateEvent: (id, data) =>

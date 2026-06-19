@@ -84,6 +84,14 @@ export const api = {
     request(`/showcase/${group}/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteShowcase: (group, id) =>
     request(`/showcase/${group}/${id}`, { method: 'DELETE' }),
+
+  getAnnouncements: () => request('/announcements'),
+  createAnnouncement: (data) =>
+    request('/announcements', { method: 'POST', body: JSON.stringify(data) }),
+  updateAnnouncement: (id, data) =>
+    request(`/announcements/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteAnnouncement: (id) =>
+    request(`/announcements/${id}`, { method: 'DELETE' }),
 };
 
 export { getToken, setToken, clearToken };

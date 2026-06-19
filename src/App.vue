@@ -21,6 +21,7 @@
 
     <main class="content">
       <GroupsManager v-if="currentView === 'groups'" />
+      <AnnouncementsManager v-else-if="currentView === 'announcements'" />
       <EventsManager v-else-if="currentView === 'events'" />
       <MembersManager v-else-if="currentView === 'members'" />
       <ShowcaseManager v-else-if="currentView === 'showcase'" />
@@ -35,6 +36,7 @@ import GroupsManager from './components/GroupsManager.vue';
 import EventsManager from './components/EventsManager.vue';
 import MembersManager from './components/MembersManager.vue';
 import ShowcaseManager from './components/ShowcaseManager.vue';
+import AnnouncementsManager from './components/AnnouncementsManager.vue';
 import { getToken, clearToken } from './api/client.js';
 
 const isLoggedIn = ref(false);
@@ -45,6 +47,7 @@ const menuItems = [
   { key: 'events', label: '活動管理' },
   { key: 'members', label: '幹部管理' },
   { key: 'showcase', label: '成果展示管理' },
+  { key: 'announcements', label: '通知管理' },
 ];
 
 const handleLoginSuccess = () => {

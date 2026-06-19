@@ -138,7 +138,8 @@ const loadEvents = async () => {
   loading.value = true;
   currentPage.value = 1;
   try {
-    events.value = await api.getEvents();
+    const data = await api.getEvents();
+    events.value = data.sort((a, b) => new Date(b.date) - new Date(a.date));
   } catch (e) {
     console.error(e);
   } finally {

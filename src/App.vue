@@ -30,7 +30,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { api } from './api/client.js';
+import { ref, onMounted, onUnmounted } from 'vue';
 import Login from './components/Login.vue';
 import GroupsManager from './components/GroupsManager.vue';
 import EventsManager from './components/EventsManager.vue';
@@ -41,6 +42,7 @@ import { getToken, clearToken } from './api/client.js';
 
 const isLoggedIn = ref(false);
 const currentView = ref('groups');
+let verifyInterval = null;
 
 const menuItems = [
   { key: 'groups', label: '小組管理' },
@@ -58,18 +60,6 @@ const handleLogout = () => {
   clearToken();
   isLoggedIn.value = false;
 };
-
-onMounted(() => {
-  if (getToken()) {
-    isLoggedIn.value = true;
-  }
-});
-
-import { onMounted, onUnmounted } from 'vue';
-import { api } from './api/client.js';
-import { getToken, clearToken } from './api/client.js';
-
-let verifyInterval = null;
 
 const checkTokenValid = async () => {
   if (!getToken()) return;

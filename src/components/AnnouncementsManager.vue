@@ -45,10 +45,6 @@
             <input v-model="form.title" required />
           </div>
           <div class="field">
-            <label>日期</label>
-            <input v-model="form.date" type="date" required />
-          </div>
-          <div class="field">
             <label>通知內容</label>
             <textarea v-model="form.content" required rows="5"></textarea>
           </div>
@@ -91,14 +87,14 @@ const paginatedItems = computed(() => {
   return items.value.slice(start, start + pageSize);
 });
 
-const form = ref({ title: '', date: '', content: '', active: false });
+const form = ref({ title: '', content: '', active: false });
 
 const loadItems = async () => {
   loading.value = true;
   currentPage.value = 1;
   try {
     const data = await api.getAnnouncements();
-    items.value = data.sort((a, b) => new Date(b.date) - new Date(a.date));
+    items.value = data.sort((a, b) => b.created_at.localeCompare(a.created_at));
   } catch (e) {
     console.error(e);
   } finally {
@@ -108,14 +104,14 @@ const loadItems = async () => {
 
 const openCreateForm = () => {
   editingId.value = null;
-  form.value = { title: '', date: '', content: '', active: false };
+  form.value = { title: '', content: '', active: false };
   formError.value = '';
   showForm.value = true;
 };
 
 const openEditForm = (item) => {
   editingId.value = item.id;
-  form.value = { title: item.title, date: item.date, content: item.content, active: item.active };
+  form.value = { title: item.title, content: item.content, active: item.active };
   formError.value = '';
   showForm.value = true;
 };

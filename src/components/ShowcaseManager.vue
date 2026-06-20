@@ -70,7 +70,7 @@
             <select v-model="form.related_event">
               <option value="">無</option>
               <option v-for="e in events" :key="e.id" :value="e.id">
-                {{ e.title }}（{{ e.date }}）
+                {{ e.title }}（{{ e.event_date }}）
               </option>
             </select>
           </div>

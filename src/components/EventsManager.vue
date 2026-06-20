@@ -20,7 +20,7 @@
       </thead>
       <tbody>
         <tr v-for="event in paginatedEvents" :key="event.id">
-          <td>{{ event.date }}</td>
+          <td>{{ event.event_date }}</td>
           <td>{{ event.title }}</td>
           <td>{{ groupName(event.group) }}</td>
           <td>{{ event.type }}</td>
@@ -44,7 +44,7 @@
           </div>
           <div class="field">
             <label>活動日期</label>
-            <input v-model="form.date" type="date" required />
+            <input v-model="form.event_date" type="date" required />
           </div>
           <div class="field">
             <label>所屬小組</label>
@@ -122,7 +122,7 @@ const paginatedEvents = computed(() => {
 const eventTypes = ['招募', '演講', '競賽', '工作坊', '其他'];
 
 const form = ref({
-  title: '', date: '', group: '', type: '', location: '',
+  title: '', event_date: '', group: '', type: '', location: '',
   description: '', content: '', links: [], registration: '',
 });
 
@@ -139,7 +139,7 @@ const loadEvents = async () => {
   currentPage.value = 1;
   try {
     const data = await api.getEvents();
-    events.value = data.sort((a, b) => new Date(b.date) - new Date(a.date));
+    events.value = data.sort((a, b) => new Date(b.event_date) - new Date(a.event_date));
   } catch (e) {
     console.error(e);
   } finally {
@@ -157,7 +157,7 @@ const loadGroups = async () => {
 
 const openCreateForm = () => {
   editingId.value = null;
-  form.value = { title: '', date: '', group: '', type: '', location: '', description: '', content: '', links: [], registration: '' };
+  form.value = { title: '', event_date: '', group: '', type: '', location: '', description: '', content: '', links: [], registration: '' };
   formError.value = '';
   showForm.value = true;
 };
@@ -165,7 +165,7 @@ const openCreateForm = () => {
 const openEditForm = (event) => {
   editingId.value = event.id;
   form.value = {
-    title: event.title, date: event.date, group: event.group, type: event.type,
+    title: event.title, event_date: event.event_date, group: event.group, type: event.type,
     location: event.location || '', description: event.description,
     content: event.content || '', links: (event.links || []).map(l => ({ ...l })),
     registration: event.registration || '',

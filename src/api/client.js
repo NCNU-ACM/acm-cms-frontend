@@ -92,6 +92,8 @@ export const api = {
     request(`/announcements/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteAnnouncement: (id) =>
     request(`/announcements/${id}`, { method: 'DELETE' }),
+
+  verifyToken: () => request('/auth/verify'),
 };
 
 export { getToken, setToken, clearToken };

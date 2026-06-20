@@ -64,6 +64,31 @@ onMounted(() => {
     isLoggedIn.value = true;
   }
 });
+
+import { onMounted, onUnmounted } from 'vue';
+import { api } from './api/client.js';
+import { getToken, clearToken } from './api/client.js';
+
+let verifyInterval = null;
+
+const checkTokenValid = async () => {
+  if (!getToken()) return;
+  try {
+    await api.verifyToken();
+  } catch (e) {
+    clearToken();
+    window.location.reload();
+  }
+};
+
+onMounted(() => {
+  checkTokenValid();
+  verifyInterval = setInterval(checkTokenValid, 5 * 60 * 1000);
+});
+
+onUnmounted(() => {
+  if (verifyInterval) clearInterval(verifyInterval);
+});
 </script>
 
 <style>

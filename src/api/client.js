@@ -1,4 +1,6 @@
-const API_BASE = 'http://127.0.0.1:8000';
+// 正式環境由 FastAPI 同時提供 API 與這個後台介面，所以用相對路徑即可。
+// 本機開發時 Vite 的 proxy 會把 /api 轉到 http://127.0.0.1:8000（見 vite.config.js）。
+const API_BASE = '/api';
 
 function getToken() {
   return localStorage.getItem('cms_token');
@@ -58,7 +60,7 @@ export const api = {
   deleteGroup: (slug) =>
     request(`/groups/${slug}`, { method: 'DELETE' }),
 
-  getEvents: () => 
+  getEvents: () =>
     request('/events'),
   createEvent: (data) =>
     request('/events', { method: 'POST', body: JSON.stringify(data) }),

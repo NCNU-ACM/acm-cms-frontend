@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { api } from '../api/client';
 import type { Announcement, AnnouncementInput } from '../types/api';
 import { errorMessage } from '../utils/errorMessage';
+import { formatCreatedAt } from '../utils/formatCreatedAt';
 import Pagination from './Pagination';
 import styles from './AnnouncementsManager.module.css';
 
@@ -114,8 +115,7 @@ export default function AnnouncementsManager() {
           <tbody>
             {paginatedItems.map((item) => (
               <tr key={item.id}>
-                {/* 通知資料只有 created_at，沒有 date 欄位，所以這一欄目前不顯示內容 */}
-                <td></td>
+                <td>{formatCreatedAt(item.created_at)}</td>
                 <td>{item.title}</td>
                 <td>
                   <span className={item.active ? styles['badge-active'] : styles['badge-inactive']}>

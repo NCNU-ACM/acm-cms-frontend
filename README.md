@@ -7,7 +7,7 @@ ACM 官網內容管理系統（CMS）的前端介面，使用 React 與 TypeScri
 | 文件 | 內容 |
 |---|---|
 | [INSTALL.md](INSTALL.md) | 伺服器安裝與部署步驟、日常維運、常見問題 |
-| 維護文件 | 維護文件見 HackMD（連結待補） |
+| 維護文件 | [React 維護指南（HackMD）](https://hackmd.io/@HcF5PSZWQxW-PSzM1BqJYw/BJxnJPpKze) |
 | 本文件 | 功能、認證流程、專案結構 |
 
 ## 專案架構
@@ -49,11 +49,13 @@ ACM 官網內容管理系統（CMS）的前端介面，使用 React 與 TypeScri
 
 帳密由後端的 `.env` 設定，見 [INSTALL.md](INSTALL.md)。
 
-為了避免使用者填寫表單填到一半才發現登入過期，介面會：
+token 有效期為 24 小時，後端重啟後也會全部失效。為了讓過期的登入盡早被發現，介面會：
 
-- 進入頁面時立即向 `/api/auth/verify` 確認 token 是否有效
+- 進入頁面時，若 `localStorage` 有 token，立即向 `/api/auth/verify` 確認：有效就維持登入，無效則清除 token 並停在登入畫面
 - 之後每 5 分鐘背景自動檢查一次
-- token 失效時自動清除並重新整理頁面，導回登入畫面
+- 定時檢查發現 token 失效，或任何請求收到 401 時，自動清除 token 並重新整理頁面，導回登入畫面
+
+> 重新整理頁面會讓還沒儲存的表單內容消失，定時驗證並不保護未儲存的資料，它只影響「何時被導回登入畫面」。填寫較長的內容時，建議先在別處寫好再貼進表單。
 
 ## API 位址設定
 
@@ -123,7 +125,7 @@ src/
 
 元件樣式使用 CSS Modules，樣式只作用在該元件內；`App.css` 與 `assets/main.css` 是全域樣式。
 
-維護文件見 HackMD（連結待補）。
+維護文件見 [HackMD](https://hackmd.io/@HcF5PSZWQxW-PSzM1BqJYw/BJxnJPpKze)。
 
 ## 技術棧
 

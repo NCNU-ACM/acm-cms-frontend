@@ -1,14 +1,12 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { api } from '../api/client';
 import type { Group, Link, Member, MemberInput } from '../types/api';
+import { academicYearOptions, getAcademicTerm } from '../utils/academicTerm';
 import { errorMessage } from '../utils/errorMessage';
 import Pagination from './Pagination';
 import styles from './MembersManager.module.css';
 
 const PAGE_SIZE = 10;
-
-const currentYear = new Date().getFullYear() - 1911;
-const academicYears = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
 interface MemberForm {
   name: string;
@@ -39,8 +37,8 @@ export default function MembersManager() {
   const [formError, setFormError] = useState('');
   const [filterSemester, setFilterSemester] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [academicYear, setAcademicYear] = useState(currentYear);
-  const [semesterPart, setSemesterPart] = useState('1');
+  const [academicYear, setAcademicYear] = useState(() => getAcademicTerm().year);
+  const [semesterPart, setSemesterPart] = useState<string>(() => getAcademicTerm().part);
   const [form, setForm] = useState<MemberForm>(emptyForm());
 
   const semesters = Array.from(new Set(members.map((m) => m.semester))).sort().reverse();
@@ -91,8 +89,9 @@ export default function MembersManager() {
   const openCreateForm = () => {
     setEditingId(null);
     setEditingSemester(null);
-    setAcademicYear(currentYear);
-    setSemesterPart('1');
+    const term = getAcademicTerm();
+    setAcademicYear(term.year);
+    setSemesterPart(term.part);
     setForm(emptyForm());
     setFormError('');
     setShowForm(true);
@@ -247,7 +246,7 @@ export default function MembersManager() {
                     disabled={!!editingId}
                     onChange={(e) => setAcademicYear(Number(e.target.value))}
                   >
-                    {academicYears.map((y) => (
+                    {academicYearOptions(getAcademicTerm().year).map((y) => (
                       <option key={y} value={y}>
                         {`${y} 學年`}
                       </option>

@@ -21,8 +21,9 @@ const menuItems: { key: View; label: string }[] = [
 const VERIFY_INTERVAL_MS = 5 * 60 * 1000;
 
 export default function App() {
-  // 重新整理後一律回到登入畫面（不看 localStorage 裡有沒有 token）
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  // 有 token 時要先驗證才知道該顯示登入頁還是後台；驗證期間先不畫任何東西，避免登入頁一閃而過。
+  const [checkingSession, setCheckingSession] = useState(() => !!getToken());
   const [currentView, setCurrentView] = useState<View>('groups');
 
   const handleLogout = () => {
@@ -33,6 +34,20 @@ export default function App() {
   // 掛載時驗證一次，之後每 5 分鐘一次；依賴陣列必須是空的，否則登入狀態一變 interval 就會重建、計時重算。
   // 沒有 token 時什麼都不做（登入畫面下 interval 仍在跑）。
   useEffect(() => {
+    // 重新整理後如果 localStorage 有 token，驗證通過就維持登入；驗證失敗（過期、無效、連不上後端）
+    // 才清掉 token 回到登入畫面。401 也在這裡處理，不 reload。
+    const restoreSession = async () => {
+      if (!getToken()) return;
+      try {
+        await api.verifyToken({ skipUnauthorizedReload: true });
+        setIsLoggedIn(true);
+      } catch {
+        clearToken();
+      } finally {
+        setCheckingSession(false);
+      }
+    };
+
     const checkTokenValid = async () => {
       if (!getToken()) return;
       try {
@@ -43,10 +58,12 @@ export default function App() {
       }
     };
 
-    checkTokenValid();
+    restoreSession();
     const verifyInterval = setInterval(checkTokenValid, VERIFY_INTERVAL_MS);
     return () => clearInterval(verifyInterval);
   }, []);
+
+  if (checkingSession) return null;
 
   if (!isLoggedIn) {
     return (

@@ -19,9 +19,10 @@ const API_BASE = '/api';
 
 type RequestOptions = Omit<RequestInit, 'headers'> & {
   headers?: Record<string, string>;
-  // 登入請求的 401 代表帳號或密碼錯誤，不是登入過期：要把後端的錯誤訊息丟給呼叫端顯示，
-  // 而不是清 token、重新整理頁面。
-  isLogin?: boolean;
+  // 預設 401 代表登入過期：清 token 並重新整理頁面。呼叫端要自己處理 401 時傳 true：
+  // 登入請求的 401 是帳號或密碼錯誤，掛載時驗證 token 的 401 是回到登入畫面，
+  // 兩者都要把錯誤丟給呼叫端，而不是 reload。
+  skipUnauthorizedReload?: boolean;
 };
 
 function getToken() {
@@ -37,7 +38,7 @@ function clearToken() {
 }
 
 async function request<T>(path: string, requestOptions: RequestOptions = {}): Promise<T> {
-  const { isLogin, ...options } = requestOptions;
+  const { skipUnauthorizedReload, ...options } = requestOptions;
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...options.headers,
@@ -53,7 +54,7 @@ async function request<T>(path: string, requestOptions: RequestOptions = {}): Pr
     headers,
   });
 
-  if (response.status === 401 && !isLogin) {
+  if (response.status === 401 && !skipUnauthorizedReload) {
     clearToken();
     window.location.reload();
     throw new Error('登入已過期，請重新登入');
@@ -74,7 +75,7 @@ export const api = {
     request<LoginResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ username, password }),
-      isLogin: true,
+      skipUnauthorizedReload: true,
     }),
 
   getGroups: () => request<Group[]>('/groups'),
@@ -120,7 +121,8 @@ export const api = {
   deleteAnnouncement: (id: string) =>
     request<MessageResponse>(`/announcements/${id}`, { method: 'DELETE' }),
 
-  verifyToken: () => request<VerifyResponse>('/auth/verify'),
+  verifyToken: (options?: { skipUnauthorizedReload?: boolean }) =>
+    request<VerifyResponse>('/auth/verify', options),
 };
 
 export { getToken, setToken, clearToken };

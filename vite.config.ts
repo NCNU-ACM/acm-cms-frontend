@@ -1,9 +1,8 @@
 import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
-  plugins: [vue(), react()],
+  plugins: [react()],
 
   // 正式環境掛在 https://網域/admin/ 底下，
   // 沒有這行的話 build 出來的 JS/CSS 會指向根目錄而 404。

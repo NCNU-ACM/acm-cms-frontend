@@ -1,13 +1,13 @@
 # NCNU ACM CMS 後台介面
 
-ACM 官網內容管理系統（CMS）的前端介面，使用 Vue 3 建置的單頁應用程式（SPA），社團幹部透過這個介面管理官網的所有動態內容。
+ACM 官網內容管理系統（CMS）的前端介面，使用 React 與 TypeScript 建置的單頁應用程式（SPA），社團幹部透過這個介面管理官網的所有動態內容。
 
 ## 文件導覽
 
 | 文件 | 內容 |
 |---|---|
 | [INSTALL.md](INSTALL.md) | 伺服器安裝與部署步驟、日常維運、常見問題 |
-| [VUE_GUIDE.md](https://github.com/NCNU-ACM/acm-website/blob/master/VUE_GUIDE.md) | Vue 3 入門教學與本專案元件導覽 |
+| 維護文件 | 維護文件見 HackMD（連結待補） |
 | 本文件 | 功能、認證流程、專案結構 |
 
 ## 專案架構
@@ -57,16 +57,16 @@ ACM 官網內容管理系統（CMS）的前端介面，使用 Vue 3 建置的單
 
 ## API 位址設定
 
-`src/api/client.js` 的 `API_BASE` 設為 `/api`，是相對路徑，因此不論部署在哪個網域或 port 都能運作，**更換網域時不需要修改**。
+`src/api/client.ts` 的 `API_BASE` 設為 `/api`，是相對路徑，因此不論部署在哪個網域或 port 都能運作，**更換網域時不需要修改**。
 
-本機開發時由 `vite.config.js` 的 proxy 把 `/api` 轉發到 `http://127.0.0.1:8000`，開發與正式環境走的路徑完全一致。
+本機開發時由 `vite.config.ts` 的 proxy 把 `/api` 轉發到 `http://127.0.0.1:8000`，開發與正式環境走的路徑完全一致。
 
-`vite.config.js` 的 `base` 設為 `/admin/`，對應正式環境的掛載路徑。修改這個值會導致 build 出的資源路徑錯誤。
+`vite.config.ts` 的 `base` 設為 `/admin/`，對應正式環境的掛載路徑。修改這個值會導致 build 出的資源路徑錯誤。
 
 ## 本機開發
 
 ### 環境需求
-- Node.js 18 以上
+- Node.js 22 以上
 - 需要 `acm-cms-backend` 在本機 `http://127.0.0.1:8000` 運行中
 
 ### 安裝與啟動
@@ -86,30 +86,48 @@ npm run build
 
 建置結果輸出在 `dist/`。正式環境中這個步驟由容器啟動時自動執行，見 [INSTALL.md](INSTALL.md)。
 
+### 型別檢查
+
+```bash
+npm run typecheck
+```
+
+型別檢查不包含在 `npm run build` 內，型別錯誤不會讓建置失敗，開發時請自行執行。
+
 ## 專案結構
 
 ```
 src/
 ├── api/
-│   └── client.js          # API 請求封裝，統一處理 token 與錯誤
-├── components/
-│   ├── Login.vue
-│   ├── GroupsManager.vue
-│   ├── EventsManager.vue
-│   ├── MembersManager.vue
-│   ├── ShowcaseManager.vue
-│   ├── AnnouncementsManager.vue
-│   └── Pagination.vue     # 共用分頁元件
-└── App.vue                # 登入判斷 + 側邊導覽 + 頁面切換
+│   └── client.ts          # API 請求封裝，統一處理 token 與錯誤
+├── types/
+│   └── api.ts             # API 資料型別（依後端 models.py）
+├── utils/
+│   └── errorMessage.ts    # 把 catch 到的錯誤轉成畫面上的訊息
+├── components/            # 每個元件一個 .tsx 與同名的 .module.css
+│   ├── Login.tsx
+│   ├── GroupsManager.tsx
+│   ├── EventsManager.tsx
+│   ├── MembersManager.tsx
+│   ├── ShowcaseManager.tsx
+│   ├── AnnouncementsManager.tsx
+│   └── Pagination.tsx     # 共用分頁元件
+├── assets/
+│   └── main.css           # 全域基礎樣式
+├── App.tsx                # 登入判斷 + 側邊導覽 + 頁面切換 + token 定時驗證
+├── App.css                # 側邊欄與版面（全域樣式）
+└── main.tsx               # 進入點
 ```
 
-五個 Manager 元件結構相同（載入資料、表格顯示、彈窗表單、新增/編輯/刪除），看懂其中一個即可理解全部。頁面切換以 `App.vue` 的 `currentView` 搭配 `v-if` 實作，未使用 vue-router。
+五個 Manager 元件結構相同（載入資料、表格顯示、彈窗表單、新增/編輯/刪除），看懂其中一個即可理解全部。頁面切換以 `App.tsx` 的 `currentView` 狀態搭配條件渲染實作，未使用路由套件。
 
-各元件的詳細說明見 [VUE_GUIDE.md](https://github.com/NCNU-ACM/acm-website/blob/master/VUE_GUIDE.md)。
+元件樣式使用 CSS Modules，樣式只作用在該元件內；`App.css` 與 `assets/main.css` 是全域樣式。
+
+維護文件見 HackMD（連結待補）。
 
 ## 技術棧
 
-- [Vue 3](https://vuejs.org/)（Composition API、`<script setup>`）
+- [React 19](https://react.dev/) 與 [TypeScript](https://www.typescriptlang.org/)
 - [Vite](https://vite.dev/)
 
 ## 相關專案

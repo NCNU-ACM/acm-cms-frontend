@@ -19,6 +19,9 @@ const API_BASE = '/api';
 
 type RequestOptions = Omit<RequestInit, 'headers'> & {
   headers?: Record<string, string>;
+  // 登入請求的 401 代表帳號或密碼錯誤，不是登入過期：要把後端的錯誤訊息丟給呼叫端顯示，
+  // 而不是清 token、重新整理頁面。
+  isLogin?: boolean;
 };
 
 function getToken() {
@@ -33,7 +36,8 @@ function clearToken() {
   localStorage.removeItem('cms_token');
 }
 
-async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+async function request<T>(path: string, requestOptions: RequestOptions = {}): Promise<T> {
+  const { isLogin, ...options } = requestOptions;
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...options.headers,
@@ -49,7 +53,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     headers,
   });
 
-  if (response.status === 401) {
+  if (response.status === 401 && !isLogin) {
     clearToken();
     window.location.reload();
     throw new Error('登入已過期，請重新登入');
@@ -70,6 +74,7 @@ export const api = {
     request<LoginResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ username, password }),
+      isLogin: true,
     }),
 
   getGroups: () => request<Group[]>('/groups'),
